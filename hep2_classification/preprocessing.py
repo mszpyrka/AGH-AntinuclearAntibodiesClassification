@@ -23,3 +23,8 @@ def _denoise(img: np.ndarray, h: float) -> np.ndarray:
 def _normalize(img: np.ndarray, result_range: Tuple[int, int] = (0, 255)) -> np.ndarray:
     """ Normalizes given image by performing simple interpolation to given range. """
     return np.interp(img, (img.min(), img.max()), result_range).astype(np.uint)
+
+
+def _equalize_histogram(img: np.ndarray) -> np.ndarray:
+    """ Equalizes histogram of image therefor increasing contrast. """
+    return cv.equalizeHist(img)
