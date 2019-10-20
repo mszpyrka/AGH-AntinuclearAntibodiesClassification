@@ -44,12 +44,12 @@ def display_grid(data: List[Any], plotter: Callable[[Any, Axes], None],
     f, axes = plt.subplots(rows, cols, figsize=(width, height), squeeze=False)
 
     # setup each subplot
-    for d, ax, title in itertools.zip_longest(data, itertools.chain.from_iterable(axes), titles):
+    for d, ax, title in itertools.zip_longest(data, itertools.chain.from_iterable(axes), titles or []):
         # in case data or titles is longer then axes
         if ax is None:
             break
         # data available => call plotter
-        if data:
+        if d is not None:
             ax.set_title(title or '')
             plotter(d, ax)
         # no data (probably empty cells in last row) => clear this cell
