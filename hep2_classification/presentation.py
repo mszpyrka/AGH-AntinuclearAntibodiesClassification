@@ -14,7 +14,8 @@ from matplotlib.axes import Axes
 def display_grid(data: List[Any], plotter: Callable[[Any, Axes], None],
                  titles: List[str] = None,
                  cols: int = 3, rows: int = None,
-                 width: int = 20, height: float = None):
+                 width: int = 20, height: float = None,
+                 **kwargs):
     """
     Helper function that creates matplotlib grid and passes each created axes with corresponding data to provided
     plotter.
@@ -28,6 +29,7 @@ def display_grid(data: List[Any], plotter: Callable[[Any, Axes], None],
     :param height: height of grid in inches, if not provided the value is calculated using first available method:
                 1. using aspect ratio of `shape` attribute of the first object from `data`
                 2. using default height of figure
+    :param kwargs: any additional keyword arguments are passed to `ply.subplots`
     """
     # calculate rows number if not provided
     if rows is None:
@@ -41,7 +43,7 @@ def display_grid(data: List[Any], plotter: Callable[[Any, Axes], None],
             height = plt.rcParams["figure.figsize"][1] * rows
 
     # create figure
-    f, axes = plt.subplots(rows, cols, figsize=(width, height), squeeze=False)
+    f, axes = plt.subplots(rows, cols, figsize=(width, height), squeeze=False, **kwargs)
 
     # setup each subplot
     for d, ax, title in itertools.zip_longest(data, itertools.chain.from_iterable(axes), titles or []):
