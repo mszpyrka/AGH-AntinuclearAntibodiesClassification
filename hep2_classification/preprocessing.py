@@ -1,6 +1,6 @@
 """ Module containing all pre-processing related functions. """
 import os
-from typing import Tuple, Optional
+from typing import Tuple
 
 import numpy as np
 import cv2 as cv
@@ -65,3 +65,16 @@ def _normalize(img: np.ndarray, result_range: Tuple[int, int] = (0, 255)) -> np.
 def _equalize_histogram(img: np.ndarray) -> np.ndarray:
     """ Equalizes histogram of image therefor increasing contrast. """
     return cv.equalizeHist(img)
+
+
+def preprocess(img: np.ndarray) -> np.ndarray:
+    """
+    Performs image pre-processing which includes: tag removal, channel reduction, resizing, denoising and normalization.
+    :param img: image to pre-process
+    :return: pre-processed image
+    """
+    steps = [_remove_tag, _reduce_channels, _resize, _denoise, _normalize]
+    for func in steps:
+        img = func(img)
+
+    return img
