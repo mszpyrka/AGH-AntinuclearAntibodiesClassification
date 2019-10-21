@@ -2,9 +2,11 @@
 import math
 import itertools
 from abc import ABC, abstractmethod
-from typing import List, Any, Callable
+from typing import List, Any, Callable, Union
 
+import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 from matplotlib.axes import Axes
 
 
@@ -19,6 +21,7 @@ def display_grid(data: List[Any], plotter: Callable[[Any, Axes], None],
     """
     Helper function that creates matplotlib grid and passes each created axes with corresponding data to provided
     plotter.
+
     :param data: list of data to be displayed in grid
     :param plotter: callable that accepts data and axis and plots given data on given axis
     :param titles: list of titles for each cell in grid
@@ -38,7 +41,12 @@ def display_grid(data: List[Any], plotter: Callable[[Any, Axes], None],
     # calculate height if not provided
     if height is None:
         if hasattr(data[0], 'shape'):
-            height = rows * (width / cols) * (data[0].shape[0] / data[0].shape[1])
+            # use aspect ario of data
+            height = (width / cols) * (data[0].shape[0] / data[0].shape[1])
+            # add margin for title in case of small cells
+            height += 0.4
+            # multiply by rows
+            height *= rows
         else:
             height = plt.rcParams["figure.figsize"][1] * rows
 
@@ -73,6 +81,7 @@ class Plotter(ABC):
 class LayerPlotter(Plotter):
     """
     Plotter that merges different plotters.
+
     If this plotter is called with data that is a instance of tuple, then each subplotter will be called with next
     element from data. Otherwise each subplotter will receive the same data.
     """
@@ -96,16 +105,22 @@ class ImagePlotter(Plotter):
         cmap='gray'
     )
 
-    def __init__(self, **kwargs):
+    def __init__(self, show_axis: bool = True, **kwargs):
         """
         Creates plotter with default settings that can be overridden by kwargs.
+
+        :param show_axis: whether or not show axis of image
         :param kwargs: arguments to be passed to `Axes.imshow()`
         """
+        self.show_axis = show_axis
         self.kwargs = self.DEFAULTS.copy()
         self.kwargs.update(kwargs)
 
-    def __call__(self, data: Any, ax: Axes):
+    def __call__(self, data: np.ndarray, ax: Axes):
         ax.imshow(data, **self.kwargs)
+
+        if not self.show_axis:
+            ax.axis('off')
 
 
 class HistogramPlotter(Plotter):
@@ -119,10 +134,40 @@ class HistogramPlotter(Plotter):
     def __init__(self, **kwargs):
         """
         Creates plotter with default settings that can be overridden by kwargs.
+
         :param kwargs: arguments to be passed to `Axes.hist()`
         """
         self.kwargs = self.DEFAULTS.copy()
         self.kwargs.update(kwargs)
 
-    def __call__(self, data: Any, ax: Axes):
+    def __call__(self, data: np.ndarray, ax: Axes):
         ax.hist(data.ravel(), **self.kwargs)
+
+
+class RectanglePlotter(Plotter):
+    """
+    Plotter that plots rectangles.
+
+    Expects to be called with data that's either tuple, or list of tuples.
+    Each tuple should be in format (x, y, width, height, [rotation]).
+    """
+    DEFAULTS = dict(
+        color='r',
+        fill=False
+    )
+
+    def __init__(self, **kwargs):
+        """
+        Creates plotter with default settings that can be overridden by kwargs.
+
+        :param kwargs: arguments to be passed to `patches.Rectangle()`
+        """
+        self.kwargs = self.DEFAULTS.copy()
+        self.kwargs.update(kwargs)
+
+    def __call__(self, data: Union[List[tuple], tuple], ax: Axes):
+        if not isinstance(data, list):
+            data = [data]
+
+        for d in data:
+            ax.add_patch(patches.Rectangle(d[:2], *d[2:], **self.kwargs))
