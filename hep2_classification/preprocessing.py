@@ -1,6 +1,7 @@
 """ Module containing all pre-processing related functions. """
 import os
 from typing import Tuple
+from itertools import compress
 
 import numpy as np
 import cv2 as cv
@@ -67,14 +68,24 @@ def _equalize_histogram(img: np.ndarray) -> np.ndarray:
     return cv.equalizeHist(img)
 
 
-def preprocess(img: np.ndarray) -> np.ndarray:
+def preprocess(img: np.ndarray, remove_tag: bool = True, reduce_channels: bool = True, resize: bool = True,
+               denoise: bool = True, normalize: bool = True, equalize: bool = False) -> np.ndarray:
     """
     Performs image pre-processing which includes: tag removal, channel reduction, resizing, denoising and normalization.
+
     :param img: image to pre-process
+    :param remove_tag: decides if tag removal is applied
+    :param reduce_channels: decides if channel reduction is applied
+    :param resize: decides if resizing is applied
+    :param denoise: decides if denoising is applied
+    :param normalize: decides if normalization is applied
+    :param equalize: decides if equalization is applied
     :return: pre-processed image
     """
-    steps = [_remove_tag, _reduce_channels, _resize, _denoise, _normalize]
-    for func in steps:
+    steps = [_remove_tag, _reduce_channels, _resize, _denoise, _normalize, _equalize_histogram]
+    mask = [remove_tag, reduce_channels, resize, denoise, normalize, equalize]
+
+    for func in compress(steps, mask):
         img = func(img)
 
     return img
