@@ -11,6 +11,15 @@ from matplotlib.axes import Axes
 
 
 # ==========================================================
+#  COLOR MAPS
+# ==========================================================
+_cmap_order = np.linspace(0, 1, 256)
+np.random.shuffle(_cmap_order)
+RANDOM_CMAP = plt.cm.colors.ListedColormap(plt.cm.hsv(_cmap_order))
+RANDOM_CMAP.colors[0, :3] = 0
+
+
+# ==========================================================
 #  GRIDS
 # ==========================================================
 def display_grid(data: List[Any], plotter: Callable[[Any, Axes], None],
