@@ -1,5 +1,6 @@
 """ Module containing all presentation related functions. """
 import math
+import copy
 import itertools
 from abc import ABC, abstractmethod
 from typing import List, Any, Callable, Union
@@ -13,10 +14,13 @@ from matplotlib.axes import Axes
 # ==========================================================
 #  COLOR MAPS
 # ==========================================================
+
+# random colors color map with first color always set to 0
 _cmap_order = np.linspace(0, 1, 256)
 np.random.shuffle(_cmap_order)
-RANDOM_CMAP = plt.cm.colors.ListedColormap(plt.cm.hsv(_cmap_order))
-RANDOM_CMAP.colors[0, :3] = 0
+cmap_random = plt.cm.colors.ListedColormap(plt.cm.get_cmap('hsv')(_cmap_order))
+cmap_random.colors[0, :3] = 0
+plt.register_cmap('random', cmap_random)
 
 
 # ==========================================================
