@@ -1,5 +1,5 @@
 """ Module containing all segmentation related functions. """
-from typing import List, Tuple, NamedTuple
+from typing import List, Tuple, NamedTuple, Generator
 
 import cv2 as cv
 import numpy as np
@@ -153,34 +153,40 @@ def _crop_image(img: np.ndarray) -> Tuple[Tuple[int, int], np.ndarray]:
 #  FINAL FUNCTION
 # ==========================================================
 class SegmentationResult(NamedTuple):
+    """ Tuple that contains segmentation results while also providing helpful getters. """
     img: np.ndarray
     offsets: List[Tuple[int, int]]
     masks: List[np.ndarray]
 
     @property
-    def boxes(self):
+    def boxes(self) -> Generator[Tuple[int, int, int, int], None, None]:
+        """ Yields bounding boxes of next cells. """
         for (x, y), mask in zip(self.offsets, self.masks):
             yield (x, y, mask.shape[0], mask.shape[1])
 
     @property
-    def cells(self):
+    def cells(self) -> Generator[np.ndarray, None, None]:
+        """ Yields segments of original image that contain cells. """
         for x, y, dx, dy in self.boxes:
             yield self.img[x:x+dx, y:y+dy]
 
     @property
-    def cells_masked(self):
+    def cells_masked(self) -> Generator[np.ndarray, None, None]:
+        """ Yields segments of original image that contain cells with parts that do not belong to cell set to 0. """
         for cell, mask in zip(self.cells, self.masks):
             yield cell * mask
 
     @property
-    def masks_full(self):
+    def masks_full(self) -> Generator[np.ndarray, None, None]:
+        """ Yields cell masks that have shape of original image. """
         for (x, y, dx, dy), mask in zip(self.boxes, self.masks):
             m = np.zeros_like(self.img)
             m[x:x+dx, y:y+dy] = mask
             yield m
 
 
-def segmentation(img: np.ndarray) -> SegmentationResult:
+def segmentate(img: np.ndarray) -> SegmentationResult:
+    """ Performs whole segmentation process of given image. """
 
     # binary image creation
     img_processed = _adaptive_kernel(img)
