@@ -27,7 +27,7 @@ plt.register_cmap('random', cmap_random)
 #  GRIDS
 # ==========================================================
 def display_grid(data: List[Any], plotter: Callable[[Any, Axes], None],
-                 titles: List[str] = None,
+                 titles: List[str] = None, header: str = None,
                  cols: int = 3, rows: int = None,
                  width: int = 20, height: float = None,
                  **kwargs):
@@ -38,6 +38,7 @@ def display_grid(data: List[Any], plotter: Callable[[Any, Axes], None],
     :param data: list of data to be displayed in grid
     :param plotter: callable that accepts data and axis and plots given data on given axis
     :param titles: list of titles for each cell in grid
+    :param header: text displayed over the grid
     :param cols: number of columns in grid
     :param rows: number of rows in grid, if not provided the value is calculated using size of `data` and `cols` so
                 that all data will be displayed
@@ -65,6 +66,10 @@ def display_grid(data: List[Any], plotter: Callable[[Any, Axes], None],
 
     # create figure
     f, axes = plt.subplots(rows, cols, figsize=(width, height), squeeze=False, **kwargs)
+
+    # set header
+    if header:
+        f.suptitle(header, fontsize=16)
 
     # setup each subplot
     for d, ax, title in itertools.zip_longest(data, itertools.chain.from_iterable(axes), titles or []):
@@ -110,6 +115,22 @@ class LayerPlotter(Plotter):
         else:
             for plotter in self.plotters:
                 plotter(data, ax)
+
+
+class ListPlotter(Plotter):
+    """
+    Plotter that triggers child plotter multiple times for each axes.
+
+    If this plotter is called with data that is a instance of list.
+    """
+
+    def __init__(self, plotter: Plotter):
+        """ Creates plotter that triggers given plotter multiple times for each axes. """
+        self.plotter = plotter
+
+    def __call__(self, data: List, ax: Axes):
+        for d in data:
+            self.plotter(d, ax)
 
 
 class ImagePlotter(Plotter):
@@ -161,8 +182,7 @@ class RectanglePlotter(Plotter):
     """
     Plotter that plots rectangles.
 
-    Expects to be called with data that's either tuple, or list of tuples.
-    Each tuple should be in format (x, y, width, height, [rotation]).
+    Expects to be called with data that's a tuple in format (x, y, width, height, [rotation]).
     """
     DEFAULTS = dict(
         color='r',
@@ -178,9 +198,26 @@ class RectanglePlotter(Plotter):
         self.kwargs = self.DEFAULTS.copy()
         self.kwargs.update(kwargs)
 
-    def __call__(self, data: Union[List[tuple], tuple], ax: Axes):
-        if not isinstance(data, list):
-            data = [data]
+    def __call__(self, data: tuple, ax: Axes):
+        ax.add_patch(patches.Rectangle(data[:2], *data[2:], **self.kwargs))
 
-        for d in data:
-            ax.add_patch(patches.Rectangle(d[:2], *d[2:], **self.kwargs))
+
+class ContourPlotter(Plotter):
+    """ Plotter that plots contours of given binary image. """
+    DEFAULTS = dict(
+        colors='r'
+    )
+
+    def __init__(self, z: List = [0.5], **kwargs):
+        """
+        Creates plotter with default settings that can be overridden by kwargs.
+
+        :param z: Z argument of `Axes.contour()`
+        :param kwargs: arguments to be passed to `Axes.contour()`
+        """
+        self.kwargs = self.DEFAULTS.copy()
+        self.kwargs.update(kwargs)
+        self.z = z
+
+    def __call__(self, data: Any, ax: Axes):
+        ax.contour(data, self.z, **self.kwargs)
