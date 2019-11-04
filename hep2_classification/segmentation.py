@@ -158,9 +158,14 @@ class SegmentationResult(NamedTuple):
     masks: List[np.ndarray]
 
     @property
-    def cells(self):
+    def boxes(self):
         for (x, y), mask in zip(self.offsets, self.masks):
-            yield self.img[x:x+mask.shape[0], y:y+mask.shape[1]]
+            yield (x, y, mask.shape[0], mask.shape[1])
+
+    @property
+    def cells(self):
+        for x, y, dx, dy in self.boxes:
+            yield self.img[x:x+dx, y:y+dy]
 
     @property
     def cells_masked(self):
@@ -169,9 +174,9 @@ class SegmentationResult(NamedTuple):
 
     @property
     def masks_full(self):
-        for (x, y), mask in zip(self.offsets, self.masks):
+        for (x, y, dx, dy), mask in zip(self.boxes, self.masks):
             m = np.zeros_like(self.img)
-            m[x:x+mask.shape[0], y:y+mask.shape[1]] = mask
+            m[x:x+dx, y:y+dy] = mask
             yield m
 
 
