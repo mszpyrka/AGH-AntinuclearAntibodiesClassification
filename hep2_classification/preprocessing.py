@@ -6,7 +6,9 @@ from itertools import compress
 import numpy as np
 import cv2 as cv
 
-# constant default settings for pre-processing
+# ==========================================================
+#  SETTINGS
+# ==========================================================
 IMG_SIZE = (800, 600)
 TAG_TEMPLATE = cv.imread(os.path.join(os.path.dirname(__file__), 'tag-template-20.tif'))
 TAG_SEARCH_RANGE = (slice(70), slice(340))
@@ -15,6 +17,9 @@ TAG_CUTOFF = (slice(55, None), slice(None, None))
 DENOISE_STRENGTH = 2
 
 
+# ==========================================================
+#  PARTIALS
+# ==========================================================
 def _match_tag(img: np.ndarray,
                search_range: Tuple[slice, slice] = TAG_SEARCH_RANGE,
                tag_template: np.ndarray = TAG_TEMPLATE
@@ -68,6 +73,9 @@ def _equalize_histogram(img: np.ndarray) -> np.ndarray:
     return cv.equalizeHist(img)
 
 
+# ==========================================================
+#  FINAL FUNCTION
+# ==========================================================
 def preprocess(img: np.ndarray, remove_tag: bool = True, reduce_channels: bool = True, resize: bool = True,
                denoise: bool = True, normalize: bool = True, equalize: bool = False) -> np.ndarray:
     """
