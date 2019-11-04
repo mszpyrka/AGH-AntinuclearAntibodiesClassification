@@ -3,7 +3,7 @@ from typing import List, Tuple, NamedTuple
 
 import cv2 as cv
 import numpy as np
-from skimage import measure, feature, morphology, segmentation as segment
+from skimage import measure, morphology, segmentation as segment
 from scipy import ndimage
 
 # ==========================================================
@@ -16,13 +16,16 @@ AK_DELTA_MIN = 400.0
 AK_DELTA_MAX = 4000.0
 THRESHOLD = 240.0
 MC_KERNEL = AK_KERNEL
-SEEDS_DISTANCE = 20
 SEEDS_STRUCT = np.ones((3, 3))
 SNAKES_SIGMA = 5
 SNAKES_ITERATIONS = 5
 SNAKES_BALLOON = 1
 SNAKES_THRESHOLD = 0.6
 SNAKES_SMOOTHING = 0
+LMAX_KERNEL = cv.getStructuringElement(cv.MORPH_ELLIPSE, (21, 21))
+LMAX_FRACTION = 0.95
+LMAX_THRESHOLD = 10
+LMAX_CONNECT_DISTANCE = 10
 
 
 # ==========================================================
@@ -84,10 +87,28 @@ def _distance_transform(img: np.ndarray) -> np.ndarray:
     return ndimage.distance_transform_edt(img > 0)
 
 
-def _watershed_seeds(dists: np.ndarray, min_distance: int = SEEDS_DISTANCE,
-                     struct: np.ndarray = SEEDS_STRUCT) -> np.ndarray:
+def _local_maximums(img: np.ndarray, kernel: np.ndarray = LMAX_KERNEL, fraction: float = LMAX_FRACTION,
+                    global_threshold: float = LMAX_THRESHOLD, connect_distance: int = LMAX_CONNECT_DISTANCE):
+    """ Finds local maximums. """
+    foreground_mask = img > global_threshold
+
+    # apply maximum filter
+    maxed = ndimage.maximum_filter(img, footprint=kernel, mode='reflect')
+
+    # select only interesting peaks
+    peaks = (img >= fraction * maxed) * foreground_mask
+
+    # join peaks that are close to each other
+    dilation_struct = cv.getStructuringElement(cv.MORPH_ELLIPSE, (connect_distance, connect_distance))
+    peaks_dilated = cv.morphologyEx(peaks.astype('uint8'), cv.MORPH_DILATE, dilation_struct)
+
+    # return only peaks that belong are within mask
+    return peaks_dilated * foreground_mask
+
+
+def _watershed_seeds(dists: np.ndarray, struct: np.ndarray = SEEDS_STRUCT) -> np.ndarray:
     """ Finds seeds for watershed algorithm by local max in given distances. """
-    local_maxes = feature.peak_local_max(dists, indices=False, min_distance=min_distance)
+    local_maxes = _local_maximums(dists)
     labeled_maxes = ndimage.label(local_maxes, structure=struct)[0]
     return labeled_maxes.astype(np.uint8)
 
