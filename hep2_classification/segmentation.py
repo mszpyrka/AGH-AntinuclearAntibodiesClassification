@@ -155,7 +155,7 @@ def _crop_image(img: np.ndarray) -> Tuple[Tuple[int, int], np.ndarray]:
 class SegmentationResult(NamedTuple):
     """ Tuple that contains segmentation results while also providing helpful getters. """
     img: np.ndarray
-    offsets: List[Tuple[int, int]]
+    offsets: np.ndarray
     masks: List[np.ndarray]
 
     @property
@@ -184,6 +184,20 @@ class SegmentationResult(NamedTuple):
             m[x:x+dx, y:y+dy] = mask
             yield m
 
+    def save(self, path: str):
+        """ Saves this segmentation result to numpy .npz file. """
+        np.savez(path, img=self.img, offsets=self.offsets, **{f'mask{i}': mask for i, mask in enumerate(self.masks)})
+
+    @staticmethod
+    def load(path: str) -> 'SegmentationResult':
+        """ Loads segmentation result form numpy .npz file. """
+        data = np.load(path)
+        img = data['img']
+        offsets = data['offsets']
+        masks = [data[f'mask{i}'] for i in range(offsets.shape[0])]
+
+        return SegmentationResult(img, offsets, masks)
+
 
 def segmentate(img: np.ndarray) -> SegmentationResult:
     """ Performs whole segmentation process of given image. """
@@ -199,6 +213,7 @@ def segmentate(img: np.ndarray) -> SegmentationResult:
 
     # contours detection
     masks = _morph_snakes(img, labels)
-    masks = [_crop_image(mask) for mask in masks]
+    offsets, masks = zip(*(_crop_image(mask) for mask in masks))
 
-    return SegmentationResult(img, *zip(*masks))
+    # create object representation
+    return SegmentationResult(img, np.array(offsets), masks)
