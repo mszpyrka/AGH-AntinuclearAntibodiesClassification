@@ -184,9 +184,10 @@ class SegmentationResult(NamedTuple):
             m[x:x+dx, y:y+dy] = mask
             yield m
 
-    def save(self, path: str):
+    def save(self, path: str, compressed: bool = True):
         """ Saves this segmentation result to numpy .npz file. """
-        np.savez(path, img=self.img, offsets=self.offsets, **{f'mask{i}': mask for i, mask in enumerate(self.masks)})
+        method = np.savez_compressed if compressed else np.savez
+        method(path, img=self.img, offsets=self.offsets, **{f'mask{i}': mask for i, mask in enumerate(self.masks)})
 
     @staticmethod
     def load(path: str) -> 'SegmentationResult':
