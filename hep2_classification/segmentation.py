@@ -29,6 +29,84 @@ LMAX_CONNECT_DISTANCE = 10
 
 
 # ==========================================================
+#  DATA STRUCTURES
+# ==========================================================
+class Segment(NamedTuple):
+    """ Tuple that represents masked part of image. """
+    x: int
+    y: int
+    mask: np.ndarray
+
+    @property
+    def slice_x(self) -> slice:
+        """ Returns slice along first axis that match this segment. """
+        return slice(self.x, self.x + self.mask.shape[0])
+
+    @property
+    def slice_y(self) -> slice:
+        """ Returns slice along second axis that match this segment. """
+        return slice(self.y, self.y + self.mask.shape[1])
+
+    @property
+    def slices(self) -> Tuple[slice, slice]:
+        """ Returns slices that match this segment. """
+        return self.slice_x, self.slice_y
+
+    @staticmethod
+    def from_mask(mask: np.ndarray) -> 'Segment':
+        """ Creates segment by cropping given mask. """
+        rows, cols = np.where(mask)
+        xs = slice(rows.min(), rows.max()+1)
+        ys = slice(cols.min(), cols.max()+1)
+        return Segment(xs.start, ys.start, mask[xs, ys])
+
+
+class SegmentationResult(NamedTuple):
+    """ Tuple that contains segmentation results while also providing helpful getters. """
+    img: np.ndarray
+    segments: List[Segment]
+
+    @property
+    def cells(self) -> Generator[np.ndarray, None, None]:
+        """ Yields segments of original image that contain cells. """
+        for seg in self.segments:
+            yield self.img[seg.slices]
+
+    @property
+    def cells_masked(self) -> Generator[np.ndarray, None, None]:
+        """ Yields segments of original image that contain cells with parts that do not belong to cell set to 0. """
+        for seg in self.segments:
+            yield self.img[seg.slices] * seg.mask
+
+    @property
+    def masks_full(self) -> Generator[np.ndarray, None, None]:
+        """ Yields cell masks that have shape of original image. """
+        for seg in self.segments:
+            m = np.zeros_like(self.img)
+            m[seg.slices] = seg.mask
+            yield m
+
+    def save(self, path: str, compressed: bool = True):
+        """ Saves this segmentation result to numpy .npz file. """
+        method = np.savez_compressed if compressed else np.savez
+        data = {f'mask_{i}': seg.mask for i, seg in enumerate(self.segments)}
+        data['img'] = self.img
+        data['offsets'] = np.array([(seg.x, seg.y) for seg in self.segments])
+
+        method(path, **data)
+
+    @staticmethod
+    def load(path: str) -> 'SegmentationResult':
+        """ Loads segmentation result form numpy .npz file. """
+        data = np.load(path)
+        img = data['img']
+        offsets = data['offsets']
+        masks = [data[f'mask_{i}'] for i in range(offsets.shape[0])]
+
+        return SegmentationResult(img, [Segment(x, y, mask) for (x, y), mask in zip(offsets, masks)])
+
+
+# ==========================================================
 #  PARTIALS
 # ==========================================================
 def _adaptive_kernel(img: np.ndarray, kernel: np.ndarray = AK_KERNEL,
@@ -136,70 +214,22 @@ def _morph_snakes(img: np.ndarray, labels: np.ndarray,
     ]
 
 
-def _crop_image(img: np.ndarray) -> Tuple[Tuple[int, int], np.ndarray]:
-    """
-    Crops given image by removing rows and columns that all evaluate to false.
+def _convex_hull(seg: Segment) -> Segment:
+    """ Returns convex hull of given segment. """
+    return Segment(seg.x, seg.y, morphology.convex_hull_image(seg.mask))
 
-    :param img: image to crop
-    :return: left-top coordinates of cropped region and region itself
-    """
-    rows, cols = np.where(img)
-    xs = slice(rows.min(), rows.max()+1)
-    ys = slice(cols.min(), cols.max()+1)
-    return (xs.start, ys.start), img[xs, ys]
+
+def _is_touching_edge(img: np.ndarray, seg: Segment) -> bool:
+    """ Returns whether given segment touches edges of given image """
+    return seg.slice_x.start <= 0 \
+        or seg.slice_x.stop >= img.shape[0] \
+        or seg.slice_y.start <= 0 \
+        or seg.slice_y.stop >= img.shape[1]
 
 
 # ==========================================================
 #  FINAL FUNCTION
 # ==========================================================
-class SegmentationResult(NamedTuple):
-    """ Tuple that contains segmentation results while also providing helpful getters. """
-    img: np.ndarray
-    offsets: np.ndarray
-    masks: List[np.ndarray]
-
-    @property
-    def boxes(self) -> Generator[Tuple[int, int, int, int], None, None]:
-        """ Yields bounding boxes of next cells. """
-        for (x, y), mask in zip(self.offsets, self.masks):
-            yield (x, y, mask.shape[0], mask.shape[1])
-
-    @property
-    def cells(self) -> Generator[np.ndarray, None, None]:
-        """ Yields segments of original image that contain cells. """
-        for x, y, dx, dy in self.boxes:
-            yield self.img[x:x+dx, y:y+dy]
-
-    @property
-    def cells_masked(self) -> Generator[np.ndarray, None, None]:
-        """ Yields segments of original image that contain cells with parts that do not belong to cell set to 0. """
-        for cell, mask in zip(self.cells, self.masks):
-            yield cell * mask
-
-    @property
-    def masks_full(self) -> Generator[np.ndarray, None, None]:
-        """ Yields cell masks that have shape of original image. """
-        for (x, y, dx, dy), mask in zip(self.boxes, self.masks):
-            m = np.zeros_like(self.img)
-            m[x:x+dx, y:y+dy] = mask
-            yield m
-
-    def save(self, path: str, compressed: bool = True):
-        """ Saves this segmentation result to numpy .npz file. """
-        method = np.savez_compressed if compressed else np.savez
-        method(path, img=self.img, offsets=self.offsets, **{f'mask{i}': mask for i, mask in enumerate(self.masks)})
-
-    @staticmethod
-    def load(path: str) -> 'SegmentationResult':
-        """ Loads segmentation result form numpy .npz file. """
-        data = np.load(path)
-        img = data['img']
-        offsets = data['offsets']
-        masks = [data[f'mask{i}'] for i in range(offsets.shape[0])]
-
-        return SegmentationResult(img, offsets, masks)
-
-
 def segmentate(img: np.ndarray) -> SegmentationResult:
     """ Performs whole segmentation process of given image. """
 
@@ -214,7 +244,14 @@ def segmentate(img: np.ndarray) -> SegmentationResult:
 
     # contours detection
     masks = _morph_snakes(img, labels)
-    offsets, masks = zip(*(_crop_image(mask) for mask in masks))
 
-    # create object representation
-    return SegmentationResult(img, np.array(offsets), masks)
+    # segments creation
+    segments = map(Segment.from_mask, masks)
+
+    # convex hull
+    segments = map(_convex_hull, segments)
+
+    # segments filtering
+    segments = filter(lambda s: not _is_touching_edge(img, s), segments)
+
+    return SegmentationResult(img, list(segments))
