@@ -1,9 +1,8 @@
 """ Module containing all presentation related functions. """
 import math
-import copy
 import itertools
 from abc import ABC, abstractmethod
-from typing import List, Any, Callable, Union
+from typing import List, Any, Callable
 
 import numpy as np
 import matplotlib.pyplot as plt
