@@ -23,6 +23,8 @@ LMAX_KERNEL = cv.getStructuringElement(cv.MORPH_ELLIPSE, (21, 21))
 LMAX_FRACTION = 0.95
 LMAX_THRESHOLD = 10
 LMAX_CONNECT_DISTANCE = 10
+MIN_CELL_SIZE = 900
+MAX_CELL_SIZE = 16000
 
 
 # ==========================================================
@@ -198,6 +200,11 @@ def _is_touching_edge(img: np.ndarray, seg: Segment) -> bool:
         or seg.slice_y.stop >= img.shape[1]
 
 
+def _has_expected_size(seg: Segment, min_size: int = MIN_CELL_SIZE, max_size: int = MAX_CELL_SIZE) -> bool:
+    """ Returns whether mask of given segment has size between given values. """
+    return min_size <= np.sum(seg.mask) <= max_size
+
+
 # ==========================================================
 #  FINAL FUNCTION
 # ==========================================================
@@ -225,5 +232,6 @@ def segmentate(img: np.ndarray) -> SegmentationResult:
 
     # segments filtering
     segments = filter(lambda s: not _is_touching_edge(img, s), segments)
+    segments = filter(lambda s: _has_expected_size(s), segments)
 
     return SegmentationResult(img, list(segments))
