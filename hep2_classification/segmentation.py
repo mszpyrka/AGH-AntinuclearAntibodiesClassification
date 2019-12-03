@@ -9,13 +9,10 @@ from scipy import ndimage
 # ==========================================================
 #  SETTINGS
 # ==========================================================
-AK_KERNEL = cv.getStructuringElement(cv.MORPH_ELLIPSE, (9, 9))
-AK_AVG_MIN = 80.0
-AK_AVG_MAX = 100.0
-AK_DELTA_MIN = 400.0
-AK_DELTA_MAX = 4000.0
+C_KERNEL = cv.getStructuringElement(cv.MORPH_ELLIPSE, (9, 9))
+TARGET_AVERAGE = 180.0
 THRESHOLD = 240.0
-MC_KERNEL = AK_KERNEL
+MC_KERNEL = cv.getStructuringElement(cv.MORPH_ELLIPSE, (9, 9))
 SEEDS_STRUCT = np.ones((3, 3))
 SNAKES_SIGMA = 5
 SNAKES_ITERATIONS = 5
@@ -109,40 +106,14 @@ class SegmentationResult(NamedTuple):
 # ==========================================================
 #  PARTIALS
 # ==========================================================
-def _adaptive_kernel(img: np.ndarray, kernel: np.ndarray = AK_KERNEL,
-                     min_avg: float = AK_AVG_MIN, max_avg: float = AK_AVG_MAX,
-                     min_delta: float = AK_DELTA_MIN, max_delta: float = AK_DELTA_MAX
-                     ) -> np.ndarray:
-    """
-    Applies given kernel while bin-searching for delta value that results in image
-    that average value is in specified range.
+def _convolve(img: np.ndarray, kernel: np.ndarray = C_KERNEL) -> np.ndarray:
+    """ Applies convolution using given kernel. """
+    return ndimage.convolve(img.astype('float'), kernel, mode='constant')
 
-    :param img: image to apply kernel to
-    :param kernel:
-    :param min_avg: minimum value that is accepted while bin-searching
-    :param max_avg: maximum value that is accepted while bin-searching
-    :param min_delta: minimum value of bin-search range
-    :param max_delta: maximum value of bin-search range
-    :return: result of applying kernel, if delta that falls in given range was not found throws exception
-    """
 
-    while max_delta - min_delta > 50:
-
-        # apply kernel and calculate avg
-        avg_delta = (min_delta + max_delta) / 2.0
-        kerneled = cv.filter2D(img, -1, kernel, delta=-avg_delta)
-        avg = np.average(kerneled)
-
-        # bin search step
-        if avg > max_avg:
-            min_delta = avg_delta
-        elif avg < min_avg:
-            max_delta = avg_delta
-        else:
-            return kerneled
-
-    # if bin search failed
-    raise ValueError('Failed to find kernel in given delta range')
+def _shift_to_average(img: np.ndarray, avg: float = TARGET_AVERAGE) -> np.ndarray:
+    """ Shifts values in image so that its average is equal to the given one. """
+    return img - np.average(img) + avg
 
 
 def _threshold(img: np.ndarray, threshold: float = THRESHOLD) -> np.ndarray:
@@ -234,7 +205,8 @@ def segmentate(img: np.ndarray) -> SegmentationResult:
     """ Performs whole segmentation process of given image. """
 
     # binary image creation
-    img_processed = _adaptive_kernel(img)
+    img_processed = _convolve(img)
+    img_processed = _shift_to_average(img_processed)
     img_processed = _threshold(img_processed)
     img_processed = _morph_closing(img_processed)
 
