@@ -1,0 +1,2 @@
+model_checkpoint_path: "weights_0.75-acc_4-classes"
+all_model_checkpoint_paths: "weights_0.75-acc_4-classes"
