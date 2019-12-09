@@ -9,21 +9,30 @@ from scipy import ndimage
 # ==========================================================
 #  SETTINGS
 # ==========================================================
+# kernel used in first convolution
 C_KERNEL = cv.getStructuringElement(cv.MORPH_ELLIPSE, (9, 9))
+# average of values in image that the image is shifted to after convolution
 TARGET_AVERAGE = 180.0
+# threshold value used after convolution to select regions of interests
 THRESHOLD = 240.0
+# kernel used in morphological closing
 MC_KERNEL = cv.getStructuringElement(cv.MORPH_ELLIPSE, (9, 9))
+# kernel used in creating labels from local maxes
 SEEDS_STRUCT = np.ones((3, 3))
+# settings of active contour algorithm
 SNAKES_SIGMA = 5
 SNAKES_ITERATIONS = 5
 SNAKES_BALLOON = 1
 SNAKES_THRESHOLD = 0.6
 SNAKES_SMOOTHING = 0
+# settings used in calculating local maxes
 LMAX_KERNEL = cv.getStructuringElement(cv.MORPH_ELLIPSE, (21, 21))
 LMAX_FRACTION = 0.95
 LMAX_THRESHOLD = 10
 LMAX_CONNECT_DISTANCE = 10
+# mask size below which cells are filtered out as too small
 MIN_CELL_SIZE = 900
+# mask size over which cells are filtered out as too big
 MAX_CELL_SIZE = 16000
 
 

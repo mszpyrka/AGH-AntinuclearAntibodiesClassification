@@ -1,4 +1,4 @@
-""" Module containing all presentation related functions. """
+""" Module containing all presentation related functions. Used mainly for development. """
 import math
 import itertools
 from abc import ABC, abstractmethod

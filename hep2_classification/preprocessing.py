@@ -9,11 +9,17 @@ import cv2 as cv
 # ==========================================================
 #  SETTINGS
 # ==========================================================
+# target size of image
 IMG_SIZE = (800, 600)
+# template used for teg detection and removal
 TAG_TEMPLATE = cv.imread(os.path.join(os.path.dirname(__file__), 'tag-template-20.tif'))
+# slice of image in which tag search is performed, the smaller the less calculations are needed
 TAG_SEARCH_RANGE = (slice(70), slice(340))
+# tag threshold over which we assume that tag was found
 TAG_MIN_MATCH = 3 * 10**6
+# slice of image that will be returned as tag-less part
 TAG_CUTOFF = (slice(55, None), slice(None, None))
+# strength of the denoise algorithm
 DENOISE_STRENGTH = 2
 
 
