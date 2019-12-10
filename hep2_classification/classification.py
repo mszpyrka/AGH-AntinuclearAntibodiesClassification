@@ -1,15 +1,15 @@
 """ Module containing all classification related functions. """
 from abc import ABC, abstractmethod
-from typing import List, Iterable
+from typing import List
 
 import numpy as np
 import cv2
 import os
 
-import tensorflow.keras as keras
+from tensorflow import keras
 
 # ==========================================================
-#  CONVOLUTIONAL NEURAL NETWORK CLASSIFIER SETTINGS
+#  CONVOLUTION NEURAL NETWORK CLASSIFIER SETTINGS
 # ==========================================================
 # size of an image that is fed to the network
 CLASSIFICATION_IMG_SIZE = (96, 96)
@@ -17,6 +17,9 @@ CLASSIFICATION_IMG_SIZE = (96, 96)
 CLASSIFICATION_MODEL_FILE = os.path.join(os.path.dirname(__file__), 'resources', 'convnet-model-v1.h5')
 
 
+# ==========================================================
+#  CLASSIFIERS
+# ==========================================================
 class BaseClassifier(ABC):
     """ Interface for other classifiers. """
 
@@ -52,8 +55,10 @@ class BaseClassifier(ABC):
 
 
 class RandomClassifier(BaseClassifier):
+    """ Random classifier for development purposes. """
 
     def classify(self, images: List[np.ndarray]) -> np.ndarray:
+        """ Returns random membership percentages. """
         result = np.random.rand(len(images), len(self.classes))
         result /= result.sum(axis=1).reshape((-1, 1))
         return result
@@ -64,29 +69,34 @@ class RandomClassifier(BaseClassifier):
 
 
 class ConvNetClassifier(BaseClassifier):
+    """ Convolution neural network based classifier. """
 
     def __init__(self):
+        """ Loads keras model. """
         self._model = keras.models.load_model(CLASSIFICATION_MODEL_FILE)
 
-    @staticmethod
-    def _preprocess(img):
-        def middle_crop(cell):
-            h, w = cell.shape
-            shorter = min(h, w)
-
-            h_skip = (h - shorter) // 2
-            v_skip = (w - shorter) // 2
-
-            return cell[h_skip:h_skip + shorter, v_skip:v_skip + shorter]
-
-        img = cv2.resize(middle_crop(img), CLASSIFICATION_IMG_SIZE)
-        img = img[..., np.newaxis]
-        return img / 255
-
     def classify(self, images: List[np.ndarray]) -> np.ndarray:
-        X = np.array([ConvNetClassifier._preprocess(i) for i in images])
-        return self._model.predict(X)
+        """ Performs classification using CNN. """
+        x = np.array([ConvNetClassifier._preprocess(img) for img in images])
+        return self._model.predict(x)
 
     @property
     def classes(self) -> List[str]:
         return ['ZIA', 'HOM', 'ACA', 'FIB']
+
+    @staticmethod
+    def _preprocess(img):
+        """ Prepares given cell so that it matches format expected by model. """
+        img = ConvNetClassifier._middle_crop(img)
+        img = cv2.resize(img, CLASSIFICATION_IMG_SIZE)
+        img = img[..., np.newaxis]
+        return img / 255
+
+    @staticmethod
+    def _middle_crop(cell: np.ndarray) -> np.ndarray:
+        """ Crops image from the center of cell. """
+        h, w = cell.shape
+        shorter = min(h, w)
+        h_skip = (h - shorter) // 2
+        v_skip = (w - shorter) // 2
+        return cell[h_skip:h_skip + shorter, v_skip:v_skip + shorter]
