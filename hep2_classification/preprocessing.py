@@ -12,7 +12,7 @@ import cv2 as cv
 # target size of image
 IMG_SIZE = (800, 600)
 # template used for teg detection and removal
-TAG_TEMPLATE = cv.imread(os.path.join(os.path.dirname(__file__), 'tag-template-20.tif'))
+TAG_TEMPLATE = cv.imread(os.path.join(os.path.dirname(__file__), 'resources', 'tag-template-20.tif'))
 # slice of image in which tag search is performed, the smaller the less calculations are needed
 TAG_SEARCH_RANGE = (slice(70), slice(340))
 # tag threshold over which we assume that tag was found

@@ -14,7 +14,7 @@ import tensorflow.keras as keras
 # size of an image that is fed to the network
 CLASSIFICATION_IMG_SIZE = (96, 96)
 # file containing saved network model
-CLASSIFICATION_MODEL_FILE = os.path.join(os.path.dirname(__file__), 'convnet-model-v1.h5')
+CLASSIFICATION_MODEL_FILE = os.path.join(os.path.dirname(__file__), 'resources', 'convnet-model-v1.h5')
 
 
 class BaseClassifier(ABC):
