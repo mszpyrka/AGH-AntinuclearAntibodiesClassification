@@ -1,9 +1,9 @@
 """ Defines function that puts given image thru whole process. """
 import numpy as np
 
-from hep2_classification import RandomClassifier, preprocess, segmentate
+from hep2_classification import ConvNetClassifier, preprocess, segmentate
 
-classifier = RandomClassifier()
+classifier = ConvNetClassifier()
 
 
 def classify_image(img: np.ndarray) -> str:

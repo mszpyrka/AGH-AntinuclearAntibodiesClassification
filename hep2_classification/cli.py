@@ -7,11 +7,11 @@ import numpy as np
 import cv2 as cv
 
 from hep2_classification import preprocess, segmentate
-from hep2_classification.classification import RandomClassifier
+from hep2_classification.classification import ConvNetClassifier
 
 
 # load classifier once
-classifier = RandomClassifier()
+classifier = ConvNetClassifier()
 
 
 @click.command(context_settings=dict(help_option_names=['-h', '--help']))
