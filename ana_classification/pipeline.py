@@ -1,7 +1,7 @@
 """ Defines function that puts given image thru whole process. """
 import numpy as np
 
-from hep2_classification import ConvNetClassifier, preprocess, segmentate
+from ana_classification import ConvNetClassifier, preprocess, segmentate
 
 classifier = ConvNetClassifier()
 

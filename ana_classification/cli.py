@@ -6,8 +6,7 @@ import click
 import numpy as np
 import cv2 as cv
 
-from hep2_classification import preprocess, segmentate
-from hep2_classification.classification import ConvNetClassifier
+from ana_classification import preprocess, segmentate, ConvNetClassifier
 
 
 # load classifier once
