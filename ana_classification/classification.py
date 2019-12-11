@@ -87,7 +87,7 @@ class ConvNetClassifier(BaseClassifier):
         return ['ZIA', 'HOM', 'ACA', 'FIB']
 
     @staticmethod
-    def _preprocess(img):
+    def _preprocess(img: np.ndarray) -> np.ndarray:
         """ Prepares given cell so that it matches format expected by model. """
         img = ConvNetClassifier._middle_crop(img)
         img = cv2.resize(img, CLASSIFICATION_IMG_SIZE)
