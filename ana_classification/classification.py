@@ -6,6 +6,8 @@ import numpy as np
 import cv2
 import os
 
+# disable info printed by tensorflow
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 from tensorflow import keras
 
 # ==========================================================
