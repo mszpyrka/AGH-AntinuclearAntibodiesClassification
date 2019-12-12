@@ -19,17 +19,16 @@ CLASSIFICATION_IMG_SIZE = (96, 96)
 # file containing saved network model
 CLASSIFICATION_MODEL_FILE = os.path.join(os.path.dirname(__file__), 'resources', 'convnet-model-v1.h5')
 
+# ==========================================================
+#  FIXME: NEGATIVE SAMPLES FILTERING
+# ==========================================================
+NEGATIVE_SAMPLES_CLASSIFIER_FILE = os.path.join(os.path.dirname(__file__), 'resources', 'negatives-classifier.bin')
 
-# ==========================================================
-#  INITIALIZING STRUCTURES
-# ==========================================================
-with open('./resources/negatives-classifier.bin', 'rb') as neg_clf:
+# load negative classifier once
+with open(NEGATIVE_SAMPLES_CLASSIFIER_FILE, 'rb') as neg_clf:
     NEGATIVE_SAMPLES_CLASSIFIER = pickle.loads(neg_clf.read())
 
 
-# ==========================================================
-#  NEGATIVE SAMPLES FILTERING
-# ==========================================================
 def is_negative(sample: np.ndarray) -> bool:
     """
     Checks if given image represents negative sample (which should
@@ -39,8 +38,8 @@ def is_negative(sample: np.ndarray) -> bool:
     :return: true only if the sample contains negative sample (representing
         healthy cells)
     """
-    X = np.array([[sample.mean(), sample.std()]])
-    prediction = NEGATIVE_SAMPLES_CLASSIFIER.predict(X)[0]
+    x = np.array([[sample.mean(), sample.std()]])
+    prediction = NEGATIVE_SAMPLES_CLASSIFIER.predict(x)[0]
     return prediction == 0
 
 
