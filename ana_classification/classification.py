@@ -5,6 +5,7 @@ from typing import List
 import numpy as np
 import cv2
 import os
+import pickle
 
 # disable info printed by tensorflow
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -17,6 +18,30 @@ from tensorflow import keras
 CLASSIFICATION_IMG_SIZE = (96, 96)
 # file containing saved network model
 CLASSIFICATION_MODEL_FILE = os.path.join(os.path.dirname(__file__), 'resources', 'convnet-model-v1.h5')
+
+
+# ==========================================================
+#  INITIALIZING STRUCTURES
+# ==========================================================
+with open('./resources/negatives-classifier.bin', 'rb') as neg_clf:
+    NEGATIVE_SAMPLES_CLASSIFIER = pickle.loads(neg_clf.read())
+
+
+# ==========================================================
+#  NEGATIVE SAMPLES FILTERING
+# ==========================================================
+def is_negative(sample: np.ndarray) -> bool:
+    """
+    Checks if given image represents negative sample (which should
+    not be processed any further within the pipeline).
+    :param sample: array containing image after preprocessing step (without
+        histogram normalization or equalization applied)
+    :return: true only if the sample contains negative sample (representing
+        healthy cells)
+    """
+    X = np.array([[sample.mean(), sample.std()]])
+    prediction = NEGATIVE_SAMPLES_CLASSIFIER.predict(X)[0]
+    return prediction == 0
 
 
 # ==========================================================
