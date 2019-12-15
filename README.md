@@ -1,11 +1,11 @@
 # Antinuclear Antibodies classification
 
-Python ibrary and command line interface that detects the type of antibodies present in serum in the diagnosis of immunological diseases based on images from indirect immunofluorescence test.
+Python library and command line interface that detects the type of antibodies present in serum in the diagnosis of immunological diseases based on images from indirect immunofluorescence test.
 
 ## Instalation
 At the moment this project in available on [TestPyPI](https://test.pypi.org/project/antinuclear-antibodies-classification/)
 ```bash
-pip install -i https://test.pypi.org/simple/ antinuclear-antibodies-classification
+pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple antinuclear-antibodies-classification
 ```
 
 ## Usage

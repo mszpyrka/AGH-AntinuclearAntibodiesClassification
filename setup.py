@@ -1,11 +1,15 @@
 from setuptools import setup
 
+with open("README.md", "r") as fh:
+    long_description = fh.read()
 
 setup(
     name='antinuclear-antibodies-classification',
-    version='0.1',
-    description='Collection of tools for IIF image processing and analysis, including automated ANA type '
-                'classification.',
+    version='0.0.4',
+    description='Library that detects the type of antibodies present in serum in the diagnosis of immunological '
+                'diseases',
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     author='Jan Gołda, Mateusz Szpyrka',
     author_email='jan.golda@gmail.com',
     classifiers=[
@@ -18,7 +22,7 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Topic :: Scientific/Engineering :: Image Recognition',
-        'Topic :: Scientific/Engineering :: Medical Science Apps'
+        'Topic :: Scientific/Engineering :: Medical Science Apps.'
     ],
     keywords='antinuclear antibodies classification ana',
     python_requires='>=3.5',
@@ -26,7 +30,7 @@ setup(
     install_requires=[
         'click>=7.0',
         'numpy>=1.17',
-        'opencv-python>=4.1',
+        'opencv-python>=4.1.2.30',
         'scikit-image>=0.16',
         'scipy>=1.3',
         'tensorflow>=2.0.0',
@@ -43,6 +47,7 @@ setup(
             'ana-classification = ana_classification.cli:cli'
         ]
     },
+    url='https://github.com/meszszi/AGH-AntinuclearAntibodiesClassification',
     project_urls={
         'Source': 'https://github.com/meszszi/AGH-AntinuclearAntibodiesClassification',
     }
