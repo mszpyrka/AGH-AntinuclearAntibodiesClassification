@@ -112,7 +112,7 @@ def create_overlay(path: str, preprocessed: np.ndarray,
 
     # get out path
     name = os.path.splitext(os.path.basename(path))[0]
-    out_path = os.path.join(cli_overlays, name + '.png')
+    out_path = os.path.join(cli_overlays, name + '-overlay.png')
 
     # create boxes data
     boxes = [
