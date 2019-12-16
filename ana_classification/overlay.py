@@ -48,6 +48,6 @@ def draw_image_info(img: np.ndarray, results: List[Tuple[float, int, str]], colo
     text = ', '.join([f'{name}: {count}' for _, count, name in results])
     img = cv.putText(img, text, (110, y+17), cv.FONT_HERSHEY_SIMPLEX, 0.4, color)
     # display probabilities of classes
-    text = ', '.join([f'{name}: {prob:4.2f}' for prob, _, name in results])
+    text = ', '.join([f'{name}: {prob:.2f}' for prob, _, name in results])
     img = cv.putText(img, text, (110, y+40), cv.FONT_HERSHEY_SIMPLEX, 0.4, color)
     return img

@@ -101,7 +101,7 @@ def handle_image(path: str):
     echo_verbose(f'\tClassified {len(cells_results)} cells:\t', nl=False)
     echo_verbose(', '.join(f'{name}: {count}' for _, count, name in results))
     echo_verbose(f'\tImage classification:\t', nl=False)
-    echo_verbose(', '.join(f'{name}: {proc:4.2f}%' for proc, _, name in results))
+    echo_verbose(', '.join(f'{name}: {proc:.2f}%' for proc, _, name in results))
 
     # create overlay
     if cli_overlays is not None:
