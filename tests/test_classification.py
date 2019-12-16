@@ -15,7 +15,7 @@ class TestClassification(unittest.TestCase):
         self.neg_classifier = NegClassifier()
 
     def test_cnn_classes(self):
-        self.assertListEqual(['ZIA', 'HOM', 'ACA', 'FIB'], self.cell_classifier.classes)
+        self.assertListEqual(['ACA', 'HOM', 'ZIA'], self.cell_classifier.classes)
 
     def test_cnn_middle_crop(self):
         img = np.random.randint(0, 255, (100, 10))
