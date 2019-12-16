@@ -115,7 +115,7 @@ class ConvNetCellClassifier(BaseCellClassifier):
 
     @property
     def classes(self) -> List[str]:
-        return ['ZIA', 'HOM', 'ACA', 'FIB']
+        return ['ZIA', 'HOM', 'ACA']
 
     @staticmethod
     def _preprocess(img: np.ndarray) -> np.ndarray:
