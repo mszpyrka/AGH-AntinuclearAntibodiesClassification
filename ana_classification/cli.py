@@ -9,10 +9,10 @@ import click
 import numpy as np
 import cv2 as cv
 
-from ana_classification import preprocess, segmentate, ConvNetClassifier, BaseClassifier, overlay, SegmentationResult
+from ana_classification import preprocess, segmentate, ConvNetCellClassifier, BaseCellClassifier, overlay, SegmentationResult
 
 # load classifier once
-classifier: BaseClassifier = ConvNetClassifier()
+classifier: BaseCellClassifier = ConvNetCellClassifier()
 
 # cli options
 cli_verbose: bool = False

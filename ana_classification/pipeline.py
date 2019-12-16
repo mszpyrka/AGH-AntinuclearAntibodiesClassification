@@ -1,10 +1,11 @@
 """ Defines function that puts given image thru whole process. """
 import numpy as np
 
-from ana_classification import ConvNetClassifier, preprocess, segmentate, is_negative
+from ana_classification import ConvNetCellClassifier, preprocess, segmentate, NegClassifier
 from ana_classification.preprocessing import _normalize
 
-classifier = ConvNetClassifier()
+classifier = ConvNetCellClassifier()
+neg_classifier = NegClassifier()
 
 
 def classify_image(img: np.ndarray) -> str:
@@ -18,7 +19,7 @@ def classify_image(img: np.ndarray) -> str:
     img = preprocess(img, normalize=False)
 
     # check for negatives
-    if is_negative(img):
+    if neg_classifier.is_negative(img):
         return 'NEG'
 
     # apply normalization manually
