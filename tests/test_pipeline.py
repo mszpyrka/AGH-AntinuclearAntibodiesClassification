@@ -20,9 +20,6 @@ class TestPipeline(unittest.TestCase):
     def test_classify_NEG(self):
         self._test_classify(glob.glob('resources/NEG-*'), 'NEG')
 
-    def test_classify_FIB(self):
-        self._test_classify(glob.glob('resources/FIB-*'), 'FIB')
-
     def test_classify_ACA(self):
         self._test_classify(glob.glob('resources/ACA-*'), 'ACA')
 

@@ -5,24 +5,53 @@ from typing import List
 import numpy as np
 import cv2
 import os
+from sklearn.svm import SVC
 
 # disable info printed by tensorflow
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 from tensorflow import keras
 
 # ==========================================================
-#  CONVOLUTION NEURAL NETWORK CLASSIFIER SETTINGS
+#  SETTINGS
 # ==========================================================
 # size of an image that is fed to the network
 CLASSIFICATION_IMG_SIZE = (96, 96)
 # file containing saved network model
 CLASSIFICATION_MODEL_FILE = os.path.join(os.path.dirname(__file__), 'resources', 'convnet-model-v1.h5')
+# file containing saved training data for neg classifier
+NEG_CLASSIFIER_DATA_FILE = os.path.join(os.path.dirname(__file__), 'resources', 'neg-classifier-data.npz')
 
 
 # ==========================================================
-#  CLASSIFIERS
+#  NEGATIVE SAMPLES FILTERING
 # ==========================================================
-class BaseClassifier(ABC):
+class NegClassifier:
+
+    def __init__(self):
+        """ Creates and fits classifier. """
+        train_data = np.load(NEG_CLASSIFIER_DATA_FILE)
+
+        self.classifier = SVC(C=0.9, kernel='poly', degree=2, gamma=0.35)
+        self.classifier.fit(train_data['x_train'], train_data['y_train'])
+
+    def is_negative(self, sample: np.ndarray) -> bool:
+        """
+        Checks if given image represents negative sample (which should
+        not be processed any further within the pipeline).
+        :param sample: array containing image after preprocessing step (without
+            histogram normalization or equalization applied)
+        :return: true only if the sample contains negative sample (representing
+            healthy cells)
+        """
+        x = np.array([[sample.mean(), sample.std()]])
+        prediction = self.classifier.predict(x)[0]
+        return prediction == 0
+
+
+# ==========================================================
+#  CELL CLASSIFIERS
+# ==========================================================
+class BaseCellClassifier(ABC):
     """ Interface for other classifiers. """
 
     @abstractmethod
@@ -48,15 +77,17 @@ class BaseClassifier(ABC):
     @staticmethod
     def merge_results(results: np.ndarray) -> np.ndarray:
         """
-        Merges results from classify() function by calculating average for each class.
+        Merges results from classify() function by using weighted voting.
 
         :param results: membership percentages from classify()
         :return: membership percentages if form of numpy vector of length len(classes)
         """
-        return results.sum(axis=0) / results.shape[0]
+        results = results.copy()
+        results[results < results.max(axis=1).reshape(-1, 1)] = 0
+        return results.sum(axis=0) / results.sum()
 
 
-class RandomClassifier(BaseClassifier):
+class RandomCellClassifier(BaseCellClassifier):
     """ Random classifier for development purposes. """
 
     def classify(self, images: List[np.ndarray]) -> np.ndarray:
@@ -70,7 +101,7 @@ class RandomClassifier(BaseClassifier):
         return ['ACA', 'AMA', 'DOT', 'FIB']
 
 
-class ConvNetClassifier(BaseClassifier):
+class ConvNetCellClassifier(BaseCellClassifier):
     """ Convolution neural network based classifier. """
 
     def __init__(self):
@@ -79,7 +110,7 @@ class ConvNetClassifier(BaseClassifier):
 
     def classify(self, images: List[np.ndarray]) -> np.ndarray:
         """ Performs classification using CNN. """
-        x = np.array([ConvNetClassifier._preprocess(img) for img in images])
+        x = np.array([ConvNetCellClassifier._preprocess(img) for img in images])
         return self._model.predict(x)
 
     @property
@@ -89,7 +120,7 @@ class ConvNetClassifier(BaseClassifier):
     @staticmethod
     def _preprocess(img: np.ndarray) -> np.ndarray:
         """ Prepares given cell so that it matches format expected by model. """
-        img = ConvNetClassifier._middle_crop(img)
+        img = ConvNetCellClassifier._middle_crop(img)
         img = cv2.resize(img, CLASSIFICATION_IMG_SIZE)
         img = img[..., np.newaxis]
         return img / 255
