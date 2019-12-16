@@ -77,12 +77,14 @@ class BaseCellClassifier(ABC):
     @staticmethod
     def merge_results(results: np.ndarray) -> np.ndarray:
         """
-        Merges results from classify() function by calculating average for each class.
+        Merges results from classify() function by using weighted voting.
 
         :param results: membership percentages from classify()
         :return: membership percentages if form of numpy vector of length len(classes)
         """
-        return results.sum(axis=0) / results.shape[0]
+        results = results.copy()
+        results[results < results.max(axis=1).reshape(-1, 1)] = 0
+        return results.sum(axis=0) / results.sum()
 
 
 class RandomCellClassifier(BaseCellClassifier):
