@@ -17,7 +17,7 @@ from tensorflow import keras
 # size of an image that is fed to the network
 CLASSIFICATION_IMG_SIZE = (96, 96)
 # file containing saved network model
-CLASSIFICATION_MODEL_FILE = os.path.join(os.path.dirname(__file__), 'resources', 'convnet-model-v2.h5')
+CLASSIFICATION_MODEL_FILE = os.path.join(os.path.dirname(__file__), 'resources', 'convnet-model-v3.h5')
 # file containing saved training data for neg classifier
 NEG_CLASSIFIER_DATA_FILE = os.path.join(os.path.dirname(__file__), 'resources', 'neg-classifier-data.npz')
 
@@ -115,7 +115,7 @@ class ConvNetCellClassifier(BaseCellClassifier):
 
     @property
     def classes(self) -> List[str]:
-        return ['ZIA', 'HOM', 'ACA']
+        return ['HOM', 'ACA', 'NUC']
 
     @staticmethod
     def _preprocess(img: np.ndarray) -> np.ndarray:
