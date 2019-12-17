@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name='antinuclear-antibodies-classification',
-    version='0.0.4',
+    version='0.1.0',
     description='Library that detects the type of antibodies present in serum in the diagnosis of immunological '
                 'diseases',
     long_description=long_description,
