@@ -23,5 +23,5 @@ class TestPipeline(unittest.TestCase):
     def test_classify_ACA(self):
         self._test_classify(glob.glob('resources/ACA-*'), 'ACA')
 
-    def test_classify_ZIA(self):
-        self._test_classify(glob.glob('resources/ZIA-*'), 'ZIA')
+    def test_classify_NUC(self):
+        self._test_classify(glob.glob('resources/NUC-*'), 'NUC')
